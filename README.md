@@ -18,7 +18,6 @@ Ce projet a pour objectif de créer une infrastructure cloud évolutive et rési
 * Azure Key Vault
 * Azure Virtual Machines
 * Azure Load Balancer
-* [langage de programmation]
 
 ## Instructions de déploiement
 
@@ -31,6 +30,7 @@ Ce projet a pour objectif de créer une infrastructure cloud évolutive et rési
 
 * kgodefroy28010400 , Konogan Godefroy
 * thia22010400      , Alex Thiebot
+* ryan 
 
 ## Licence
 
