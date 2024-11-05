@@ -1,0 +1,76 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool: "default"
+
+variables:
+  - name: CloudInitContent
+  - name: resourceGroupName
+    value: 'Gurotre'
+  - name: location
+    value: 'East US'
+  - name: projectFolder
+    value: 'KeyVault'
+
+steps:
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      $CloudContent = Get-Content -Path .\AzureResourceGroupTest1\Cloud-Init.txt -Raw
+      Write-Host $CloudContent
+      $encodedContent = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($CloudContent))
+      Write-Host $encodedContent
+      Write-Host "##vso[task.setvariable variable=CloudInitContent;]$encodedContent"
+
+- script: 
+    echo $(CloudInitContent)
+
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'Subscription test(4ac294e8-7891-477a-8221-b4083cb18486)'
+    subscriptionId: '4ac294e8-7891-477a-8221-b4083cb18486'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'Test1'
+    location: 'East US'
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Build.SourcesDirectory)\AzureResourceGroupTest1\azuredeploy.json'
+    csmParametersFile: '$(Build.SourcesDirectory)\AzureResourceGroupTest1\azuredeploy.parameters.json'
+    overrideParameters: '-customData $(CloudInitContent) -adminPassword $(AdminPass)'
+    deploymentMode: 'Incremental'
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploying Azure KeyVAult
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'Subscription test(4ac294e8-7891-477a-8221-b4083cb18486)'
+    subscriptionId: '4ac294e8-7891-477a-8221-b4083cb18486'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'Gurotre'
+    location: $(location)
+    templateLocation: 'Linked artifact'
+    csmFile: '$(Build.SourcesDirectory)\$(projectFolder)\azuredeploykey.json'
+    csmParametersFile: '$(Build.SourcesDirectory)\$(projectFolder)\azuredeploykey.parameters.json'
+    deploymentMode: 'Incremental'
+    deploymentOutputs: 'KeyVaultDeployment'
+
+- task: AzureKeyVault@2
+  displayName: Get Secret
+  inputs:
+    azureSubscription: 'Subscription test(4ac294e8-7891-477a-8221-b4083cb18486)'
+    KeyVaultName: 'alexVAULT12398'
+    SecretsFilter: 'AdminPass'
+    RunAsPreJob: false
+    
+- task: PowerShell@2
+  displayName: Test Secrets
+  inputs:
+    targetType: 'inline'
+    script: |
+          Write-Host $(AdminPass)
