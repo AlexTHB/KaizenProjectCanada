@@ -34,5 +34,5 @@ Ce projet a pour objectif de créer une infrastructure cloud évolutive et rési
 
 ## Licence
 
-kono et alex KAIZEN projet
+kono, alex et rayan KAIZEN projet
 
