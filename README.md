@@ -30,7 +30,7 @@ Ce projet a pour objectif de créer une infrastructure cloud évolutive et rési
 
 * kgodefroy28010400 , Konogan Godefroy
 * thia22010400      , Alex Thiebot
-* ryan 
+* Rayan Longhi
 
 ## Licence
 
