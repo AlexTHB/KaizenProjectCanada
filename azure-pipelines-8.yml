@@ -10,8 +10,6 @@ pool: "default"
 
 variables:
   - name: CloudInitContent
-  - name: resourceGroupName
-    value: 'Gurotre'
   - name: location
     value: 'East US'
   - name: projectFolder
@@ -34,7 +32,7 @@ steps:
 - task: AzureResourceManagerTemplateDeployment@3
   inputs:
     deploymentScope: 'Resource Group'
-    azureResourceManagerConnection: 'Subscription test(4ac294e8-7891-477a-8221-b4083cb18486)'
+    azureResourceManagerConnection: 'alexconnect'
     subscriptionId: '4ac294e8-7891-477a-8221-b4083cb18486'
     action: 'Create Or Update Resource Group'
     resourceGroupName: 'Test1'
@@ -49,22 +47,23 @@ steps:
   displayName: Deploying Azure KeyVAult
   inputs:
     deploymentScope: 'Resource Group'
-    azureResourceManagerConnection: 'Subscription test(4ac294e8-7891-477a-8221-b4083cb18486)'
+    azureResourceManagerConnection: 'alexconnect'
     subscriptionId: '4ac294e8-7891-477a-8221-b4083cb18486'
     action: 'Create Or Update Resource Group'
-    resourceGroupName: 'Gurotre'
+    resourceGroupName: 'KaizenGroup'
     location: $(location)
     templateLocation: 'Linked artifact'
     csmFile: '$(Build.SourcesDirectory)\$(projectFolder)\azuredeploykey.json'
     csmParametersFile: '$(Build.SourcesDirectory)\$(projectFolder)\azuredeploykey.parameters.json'
+    overrideParameters: '-Secret $(AdminPass)'
     deploymentMode: 'Incremental'
     deploymentOutputs: 'KeyVaultDeployment'
 
 - task: AzureKeyVault@2
   displayName: Get Secret
   inputs:
-    azureSubscription: 'Subscription test(4ac294e8-7891-477a-8221-b4083cb18486)'
-    KeyVaultName: 'alexVAULT12398'
+    azureSubscription: 'alexconnect'
+    KeyVaultName: 'KaizenKey'
     SecretsFilter: 'AdminPass'
     RunAsPreJob: false
     
