@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "name": {
-      "value": "alexVAULT12398"
+      "value": "KaizenKey"
     },
     "location": {
       "value": "eastus"
@@ -47,7 +47,7 @@
       }
     },
     "Secret": {
-      "value": "FOLIE"
+      "value": null
     }
   }
 }
