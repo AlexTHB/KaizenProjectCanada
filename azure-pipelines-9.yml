@@ -49,7 +49,7 @@ steps:
     csmFile: '$(Build.SourcesDirectory)\AzureResourceGroupTest1\azuredeploy.json' # Chemin vers le fichier JSON du modèle
     csmParametersFile: '$(Build.SourcesDirectory)\AzureResourceGroupTest1\azuredeploy.parameters.json' # Fichier des paramètres
     overrideParameters: '-customData $(CloudInitContent) -adminPassword $(AdminPass)' # Paramètres remplacés lors du déploiement
-    deploymentMode: 'Incremental' # Mode de déploiement : Incrémental (ne remplace que les ressources modifiées)
+    deploymentMode: 'Incremental' # Mode de déploiement Incrémental (ne remplace que les ressources modifiées)
 
 # Étape 4 : Déploiement du KeyVault
 # Cette étape déploie un Azure KeyVault à l'aide d'un modèle ARM
