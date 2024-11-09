@@ -1,20 +1,24 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# Définition du pipeline Azure DevOps
+# Le pipeline se déclenche sur les modifications apportées à la branche "master"
 
 trigger:
 - master
 
+# Pool d'agents
+# Spécifie le pool d'agents à utiliser pour exécuter le pipeline
 pool: "default"
 
+# Déclaration des variables
+# Ces variables peuvent être utilisées dans différentes étapes du pipeline
 variables:
-  - name: CloudInitContent
+  - name: CloudInitContent # Contenu encodé du fichier Cloud-Init, à remplir plus tard
   - name: location
-    value: 'East US'
+    value: 'East US' # Emplacement par défaut pour le déploiement
   - name: projectFolder
-    value: 'KeyVault'
+    value: 'KeyVault' # Nom du dossier contenant les fichiers de déploiement pour KeyVault
 
+# Étape 1 : Exécuter un script PowerShell en ligne
+# Cette étape lit le contenu du fichier Cloud-Init, le convertit en Base64, puis stocke ce contenu dans la variable CloudInitContent
 steps:
 - task: PowerShell@2
   inputs:
@@ -26,23 +30,29 @@ steps:
       Write-Host $encodedContent
       Write-Host "##vso[task.setvariable variable=CloudInitContent;]$encodedContent"
 
+# Étape 2 : Afficher la valeur de la variable CloudInitContent
+# Simplement pour vérifier que le contenu encodé est correct
 - script: 
     echo $(CloudInitContent)
 
+# Étape 3 : Déploiement d'un modèle Azure Resource Manager (ARM)
+# Crée ou met à jour un groupe de ressources Azure en utilisant un modèle ARM
 - task: AzureResourceManagerTemplateDeployment@3
   inputs:
-    deploymentScope: 'Resource Group'
-    azureResourceManagerConnection: 'alexconnect'
-    subscriptionId: '4ac294e8-7891-477a-8221-b4083cb18486'
-    action: 'Create Or Update Resource Group'
-    resourceGroupName: 'Test1'
-    location: 'East US'
-    templateLocation: 'Linked artifact'
-    csmFile: '$(Build.SourcesDirectory)\AzureResourceGroupTest1\azuredeploy.json'
-    csmParametersFile: '$(Build.SourcesDirectory)\AzureResourceGroupTest1\azuredeploy.parameters.json'
-    overrideParameters: '-customData $(CloudInitContent) -adminPassword $(AdminPass)'
-    deploymentMode: 'Incremental'
+    deploymentScope: 'Resource Group' # Déploiement à l'échelle du groupe de ressources
+    azureResourceManagerConnection: 'alexconnect' # Connexion Azure définie dans DevOps
+    subscriptionId: '4ac294e8-7891-477a-8221-b4083cb18486' # ID de l'abonnement Azure
+    action: 'Create Or Update Resource Group' # Action de déploiement
+    resourceGroupName: 'Test1' # Nom du groupe de ressources
+    location: 'East US' # Emplacement du groupe de ressources
+    templateLocation: 'Linked artifact' # Emplacement du fichier modèle
+    csmFile: '$(Build.SourcesDirectory)\AzureResourceGroupTest1\azuredeploy.json' # Chemin vers le fichier JSON du modèle
+    csmParametersFile: '$(Build.SourcesDirectory)\AzureResourceGroupTest1\azuredeploy.parameters.json' # Fichier des paramètres
+    overrideParameters: '-customData $(CloudInitContent) -adminPassword $(AdminPass)' # Paramètres remplacés lors du déploiement
+    deploymentMode: 'Incremental' # Mode de déploiement : Incrémental (ne remplace que les ressources modifiées)
 
+# Étape 4 : Déploiement du KeyVault
+# Cette étape déploie un Azure KeyVault à l'aide d'un modèle ARM
 - task: AzureResourceManagerTemplateDeployment@3
   displayName: Deploying Azure KeyVAult
   inputs:
@@ -50,23 +60,27 @@ steps:
     azureResourceManagerConnection: 'alexconnect'
     subscriptionId: '4ac294e8-7891-477a-8221-b4083cb18486'
     action: 'Create Or Update Resource Group'
-    resourceGroupName: 'KaizenGroup'
-    location: $(location)
+    resourceGroupName: 'KaizenGroup' # Nom du groupe de ressources pour KeyVault
+    location: $(location) # Emplacement, basé sur la variable définie
     templateLocation: 'Linked artifact'
-    csmFile: '$(Build.SourcesDirectory)\$(projectFolder)\azuredeploykey.json'
-    csmParametersFile: '$(Build.SourcesDirectory)\$(projectFolder)\azuredeploykey.parameters.json'
-    overrideParameters: '-Secret $(AdminPass)'
+    csmFile: '$(Build.SourcesDirectory)\$(projectFolder)\azuredeploykey.json' # Fichier modèle pour KeyVault
+    csmParametersFile: '$(Build.SourcesDirectory)\$(projectFolder)\azuredeploykey.parameters.json' # Fichier des paramètres
+    overrideParameters: '-Secret $(AdminPass)' # Paramètres supplémentaires, ici le mot de passe admin
     deploymentMode: 'Incremental'
-    deploymentOutputs: 'KeyVaultDeployment'
+    deploymentOutputs: 'KeyVaultDeployment' # Stocke les sorties du déploiement dans une variable
 
+# Étape 5 : Récupération d'un secret depuis Azure KeyVault
+# Cette étape lit un secret spécifique nommé "AdminPass" depuis le KeyVault déployé
 - task: AzureKeyVault@2
   displayName: Get Secret
   inputs:
     azureSubscription: 'alexconnect'
-    KeyVaultName: 'KaizenKey'
-    SecretsFilter: 'AdminPass'
+    KeyVaultName: 'KaizenKey' # Nom du KeyVault
+    SecretsFilter: 'AdminPass' # Filtre pour récupérer uniquement le secret "AdminPass"
     RunAsPreJob: false
-    
+
+# Étape 6 : Affichage du secret récupéré
+# Affiche le mot de passe admin récupéré depuis le KeyVault pour vérification
 - task: PowerShell@2
   displayName: Test Secrets
   inputs:
